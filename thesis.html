@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Master's thesis: guidewire detection and tracking models trained on simulated X-ray sequences and adapted to real fluoroscopy without annotations.">
+  <meta name="keywords" content="guidewire tracking, sim-to-real, domain adaptation, DRR, X-ray fluoroscopy, YOLOv8, pseudo-labelling">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sim-to-Real Guidewire Tracking</title>
+  <meta property="og:title" content="Generalizing Tracking Models under Sim-to-Real Domain Shift for Guidewire Tracking in X-ray Fluoroscopy">
+  <meta property="og:image" content="static/images/da-augmented.webp">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item brand" href="index.html">Oğuz Kaan İmamoğlu</a>
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="nav-menu">
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu" id="nav-menu">
+    <div class="navbar-end">
+      <a class="navbar-item" href="index.html"><span class="icon"><i class="fas fa-home"></i></span><span>Home</span></a>
+      <a class="navbar-item" href="index.html#work">Work</a>
+      <a class="navbar-item" href="index.html#experience">Experience</a>
+      <a class="navbar-item" href="index.html#education">Education</a>
+      <a class="navbar-item" href="index.html#skills">Skills</a>
+      <a class="navbar-item" href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== Title ===== -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Generalizing Tracking Models under Sim-to-Real Domain Shift for Guidewire Tracking in X-ray Fluoroscopy</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="index.html">Oğuz Kaan İmamoğlu</a></span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Master's Thesis in Informatics, Technical University of Munich, 2025</span>
+          </div>
+          <div class="is-size-6 publication-authors" style="color:#6b6b6b;margin-top:.25rem">
+            <span class="author-block">Chair for Computer Aided Medical Procedures, with the German Heart Centre Munich</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="./static/pdfs/Imamoglu_MSc_Thesis.pdf" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Thesis</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#method" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-project-diagram"></i></span><span>Method</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#adaptation" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-sync-alt"></i></span><span>Domain adaptation</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#metrics" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-ruler"></i></span><span>Metrics</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#results" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-chart-bar"></i></span><span>Results</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Teaser ===== -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <div class="video-grid g3" style="margin-top:0">
+        <figure>
+          <video poster="./static/videos/drr_4dcta.webp" autoplay muted loop playsinline preload="auto" src="./static/videos/drr_4dcta.mp4" aria-label="Simulated X-ray sequence with a moving guidewire and heart motion"></video>
+          <figcaption><span class="tag-sim">Simulated</span> DRR sequence with heart motion</figcaption>
+        </figure>
+        <figure>
+          <video poster="./static/videos/single_dapl.webp" autoplay muted loop playsinline preload="auto" src="./static/videos/single_dapl.mp4" aria-label="Single guidewire tracked on a real X-ray sequence"></video>
+          <figcaption><span class="tag-real">Real</span> single guidewire, tracked</figcaption>
+        </figure>
+        <figure>
+          <video poster="./static/videos/double_dapl.webp" autoplay muted loop playsinline preload="auto" src="./static/videos/double_dapl.mp4" aria-label="Two guidewires tracked with separate IDs on a real X-ray sequence"></video>
+          <figcaption><span class="tag-real">Real</span> two guidewires, unseen dataset</figcaption>
+        </figure>
+      </div>
+      <h2 class="subtitle has-text-centered" style="margin-top:1.5rem">
+        A guidewire tracker trained on <b>simulated X-ray sequences</b> and adapted to real fluoroscopy
+        <b>without any annotated real frames</b>, running at about 80 FPS.
+      </h2>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Abstract -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Guidewire tracking plays an important role in minimally invasive vascular interventions, where
+            clinicians rely on real-time X-ray fluoroscopy to navigate guidewires through narrow vascular
+            structures. Guidewires are not always clearly visible in fluoroscopy, and annotated real-world
+            datasets are difficult to access, which makes automated tracking challenging.
+          </p>
+          <p>
+            This thesis presents a simulation-based approach for training deep learning models to detect and
+            track guidewires. Realistic Digitally Reconstructed Radiographs (DRRs) are generated from CT
+            angiography volumes and enhanced with simulated guidewire movement and temporally varying
+            deformation fields that model cardiac motion. The result is a set of anatomically realistic,
+            automatically annotated training sequences.
+          </p>
+          <p>
+            To bridge the domain gap between synthetic and real X-ray images, an unsupervised domain adaptation
+            pipeline based on domain augmentation and iterative pseudo-labelling is proposed. A YOLOv8 detector
+            trained on DRRs is fine-tuned on its own high-confidence predictions on unannotated real X-ray, and
+            QDTrack is evaluated for comparison. On real clinical datasets, the pipeline achieves competitive
+            tracking performance without relying on any annotated real images.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problem -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Problem statement</h2>
+        <div class="content has-text-justified">
+          <p>
+            A <b>guidewire</b> is a thin, flexible medical wire used to access and navigate blood vessels in
+            minimally invasive procedures such as angioplasty, stent placement and catheterization. It is the
+            first instrument to cross narrowed or blocked segments and serves as the rail along which balloons,
+            catheters and stents are advanced. Its thin metallic structure makes it difficult to see in
+            fluoroscopy; often only the tip appears as a faint, moving line.
+          </p>
+          <div class="columns is-vcentered guidewire-intro">
+            <div class="column is-7">
+              <figure class="gw-figure" style="margin:0">
+                <svg viewBox="0 0 540 300" role="img" aria-label="Illustration of a guidewire inside a coronary artery. A catheter enters the vessel, and the thin guidewire extends beyond the catheter tip, following the artery into a side branch with a slightly curved tip.">
+                  <!-- vessel wall and lumen -->
+                  <path d="M10 230 C 130 230, 175 130, 290 116 C 380 104, 440 70, 530 40" class="gw-wall" stroke-width="40"/>
+                  <path d="M290 116 C 350 130, 415 180, 520 236" class="gw-wall" stroke-width="30"/>
+                  <path d="M10 230 C 130 230, 175 130, 290 116 C 380 104, 440 70, 530 40" class="gw-lumen" stroke-width="30"/>
+                  <path d="M290 116 C 350 130, 415 180, 520 236" class="gw-lumen" stroke-width="21"/>
+                  <!-- catheter -->
+                  <path d="M10 230 C 90 230, 140 205, 172 168" class="gw-catheter"/>
+                  <!-- guidewire -->
+                  <path d="M10 230 C 130 230, 175 130, 290 116 C 352 128, 405 168, 452 196 C 466 205, 474 213, 470 222" class="gw-wire"/>
+                  <!-- labels -->
+                  <line x1="92" y1="221" x2="92" y2="268" class="gw-lead"/>
+                  <text x="92" y="284" class="gw-label" text-anchor="middle">Catheter</text>
+                  <line x1="236" y1="128" x2="236" y2="62" class="gw-lead"/>
+                  <text x="236" y="52" class="gw-label" text-anchor="middle">Guidewire</text>
+                  <text x="236" y="32" class="gw-sub" text-anchor="middle">≈ 0.36 mm (0.014 in) in coronary procedures</text>
+                  <line x1="470" y1="224" x2="470" y2="272" class="gw-lead"/>
+                  <text x="470" y="288" class="gw-label" text-anchor="middle">Flexible tip</text>
+                  <text x="318" y="84" class="gw-sub">Coronary artery</text>
+                </svg>
+                <figcaption class="fig-cap">Schematic of a guidewire inside a coronary artery (illustration).</figcaption>
+              </figure>
+            </div>
+            <div class="column is-5">
+              <figure style="margin:0">
+                <img src="./static/images/da-real.webp" alt="Real fluoroscopy frame in which only the thin, dark guidewire is visible against overlapping anatomy" loading="lazy" style="border-radius:6px;width:100%">
+                <figcaption class="fig-cap">The same instrument in X-ray fluoroscopy: a thin, faint line against overlapping anatomy.</figcaption>
+              </figure>
+            </div>
+          </div>
+          <p>
+            During coronary interventions, the guidewire is advanced through the arteries under live, low-dose
+            X-ray. Automatic
+            tracking of the guidewire is challenging for several reasons:
+          </p>
+          <ul>
+            <li>The wire is only a few pixels wide and appears faint against overlapping anatomy; the edges of ribs and vertebrae can look similarly wire-like.</li>
+            <li>The wire is flexible, so its shape changes between frames.</li>
+            <li>It lacks colour and texture, which limits appearance-based re-identification.</li>
+            <li>Tracking must run at video frame rate to be clinically useful.</li>
+          </ul>
+          <p>
+            The main limitation is data. Clinical X-ray sequences are difficult to obtain for ethical and privacy
+            reasons, and frame-by-frame annotation of a thin wire requires expert time. This work investigates
+            whether a tracker trained only on synthetic sequences generated from CT can generalize to real
+            fluoroscopy, and which methods are needed to close the remaining domain gap.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tools and datasets -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Datasets and tools</h2>
+        <div class="columns tools">
+          <div class="column">
+            <div class="box">
+              <h3 class="title is-5">Datasets</h3>
+              <dl>
+                <dt>4D CTA</dt><dd>6 patients, 20 cardiac phases each. Source of heart motion.</dd>
+                <dt>ASOCA <a class="cite" href="#ref-1">[1]</a></dt><dd>Public dataset; 20 static CTA scans of healthy patients with coronary artery segmentations.</dd>
+                <dt>Single-guidewire real X-ray</dt><dd>20 annotated sequences, 5,004 frames, 512 × 512. Training split used without annotations for pseudo-labelling; test split for evaluation.</dd>
+                <dt>Double-guidewire real X-ray (German Heart Centre Munich)</dt><dd>10 sequences, 147 frames, manually annotated for evaluation only. Excluded from all training.</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="column">
+            <div class="box">
+              <h3 class="title is-5">Tools and frameworks</h3>
+              <dl>
+                <dt>Preprocessing</dt><dd>TotalSegmentator <a class="cite" href="#ref-4">[4]</a>, 3D Slicer, VMTK-based centerline extraction, SimpleITK</dd>
+                <dt>Registration</dt><dd>elastix and Transformix <a class="cite" href="#ref-5">[5]</a> (rigid and B-spline)</dd>
+                <dt>Simulation</dt><dd>DiffDeepDRR <a class="cite" href="#ref-3">[3]</a>, a differentiable extension of DeepDRR <a class="cite" href="#ref-2">[2]</a>, and a guidewire tip simulation tool from the research group</dd>
+                <dt>Detection and tracking</dt><dd>PyTorch, Ultralytics YOLOv8, BoT-SORT <a class="cite" href="#ref-6">[6]</a>, QDTrack <a class="cite" href="#ref-7">[7]</a>, OpenCV</dd>
+                <dt>Evaluation</dt><dd>TrackEval (HOTA, MOTA, IDF1)</dd>
+                <dt>Hardware</dt><dd>NVIDIA Quadro RTX 6000, 24 GB</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Method overview -->
+    <div class="columns is-centered" id="method">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Method</h2>
+        <div class="content has-text-justified">
+          <p>
+            The method consists of two parts. The simulation part builds an annotated synthetic dataset from CT.
+            The learning part trains detection and tracking models on this dataset and adapts them to real X-ray
+            using unannotated clinical frames.
+          </p>
+        </div>
+        <div class="diagram" role="img" aria-label="Pipeline diagram. Simulation row: 4D CTA and ASOCA scans go through preprocessing, heart motion extraction and sequence rendering to produce a synthetic annotated dataset. Learning row: a detector is trained on the synthetic data, pseudo-labels real unannotated X-ray frames above 0.9 confidence, is fine-tuned on them for ten iterations, and becomes the final tracker.">
+          <svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow"/></marker>
+              <marker id="ahA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-acc"/></marker>
+            </defs>
+            <text x="0" y="18" class="t2">Simulation: build an annotated dataset</text>
+            <rect x="0" y="36" width="150" height="58" rx="6" class="box-u"/>
+            <text x="12" y="60" class="t">4D CTA</text><text x="12" y="79" class="t2">6 patients, 20 phases</text>
+            <rect x="0" y="106" width="150" height="58" rx="6" class="box-u"/>
+            <text x="12" y="130" class="t">ASOCA CTA</text><text x="12" y="149" class="t2">20 static, public</text>
+
+            <rect x="200" y="36" width="185" height="128" rx="6" class="box-u"/>
+            <text x="214" y="58" class="tn">1</text><text x="230" y="58" class="t">Preprocess</text>
+            <text x="214" y="84" class="t2">Segment heart and vessels</text><text x="214" y="102" class="t2">Crop to the chest</text>
+            <text x="214" y="120" class="t2">Coronary centerlines</text><text x="214" y="138" class="t2">Graph search for routes</text>
+
+            <rect x="430" y="36" width="185" height="128" rx="6" class="box-u"/>
+            <text x="444" y="58" class="tn">2</text><text x="460" y="58" class="t">Heart motion</text>
+            <text x="444" y="84" class="t2">B-spline registration</text><text x="444" y="102" class="t2">across 20 phases</text>
+            <text x="444" y="120" class="t2">Deformation fields,</text><text x="444" y="138" class="t2">transferred to ASOCA</text>
+
+            <rect x="660" y="36" width="185" height="128" rx="6" class="box-u"/>
+            <text x="674" y="58" class="tn">3</text><text x="690" y="58" class="t">Render sequences</text>
+            <text x="674" y="84" class="t2">Guidewire tip as tungsten</text><text x="674" y="102" class="t2">Deform each time step</text>
+            <text x="674" y="120" class="t2">Project with DiffDeepDRR</text><text x="674" y="138" class="t2">7 LCA, 4 RCA poses</text>
+
+            <rect x="880" y="36" width="120" height="128" rx="6" class="box-u"/>
+            <text x="892" y="58" class="t">Synthetic</text><text x="892" y="76" class="t">dataset</text>
+            <text x="892" y="102" class="t2">951 sequences</text><text x="892" y="120" class="t2">10,365 frames</text><text x="892" y="138" class="t2">auto-annotated</text>
+
+            <path d="M150 100 H196" class="edge" marker-end="url(#ah)"/>
+            <path d="M385 100 H426" class="edge" marker-end="url(#ah)"/>
+            <path d="M615 100 H656" class="edge" marker-end="url(#ah)"/>
+            <path d="M845 100 H876" class="edge" marker-end="url(#ah)"/>
+
+            <rect x="200" y="176" width="185" height="30" rx="5" class="lane"/><text x="212" y="196" class="t2">TotalSegmentator, VMTK</text>
+            <rect x="430" y="176" width="185" height="30" rx="5" class="lane"/><text x="442" y="196" class="t2">elastix, Transformix</text>
+            <rect x="660" y="176" width="185" height="30" rx="5" class="lane"/><text x="672" y="196" class="t2">guidewire tool, DiffDeepDRR</text>
+
+            <path d="M940 164 V236 H292 V272" class="edge" marker-end="url(#ah)"/>
+            <text x="0" y="262" class="t2">Learning: train on simulation,</text><text x="0" y="278" class="t2">adapt to real X-ray</text>
+
+            <rect x="200" y="276" width="185" height="112" rx="6" class="box-u"/>
+            <text x="214" y="298" class="tn">4</text><text x="230" y="298" class="t">Train detector</text>
+            <text x="214" y="324" class="t2">YOLOv8n on DRRs</text><text x="214" y="342" class="t2">30% domain-augmented</text><text x="214" y="360" class="t2">(FDA, noise, gamma)</text>
+
+            <rect x="430" y="276" width="185" height="112" rx="6" class="box-u"/>
+            <text x="444" y="298" class="tn">5</text><text x="460" y="298" class="t">Pseudo-label</text>
+            <text x="444" y="324" class="t2">Predict on real frames</text><text x="444" y="342" class="t2">Keep confidence ≥ 0.9</text><text x="444" y="360" class="t2">Grow pseudo-label set</text>
+
+            <rect x="660" y="276" width="185" height="112" rx="6" class="box-u"/>
+            <text x="674" y="298" class="t">Fine-tune</text>
+            <text x="674" y="324" class="t2">On pseudo labels only</text><text x="674" y="342" class="t2">Repeat 10 iterations</text><text x="674" y="360" class="t2">Early stop, patience 5</text>
+
+            <rect x="880" y="276" width="120" height="112" rx="6" class="box-u"/>
+            <text x="892" y="298" class="t">Tracker</text>
+            <text x="892" y="324" class="t2">+ BoT-SORT</text><text x="892" y="342" class="t2">~80 FPS</text><text x="892" y="360" class="t2">no real annotations</text>
+
+            <path d="M385 332 H426" class="edge" marker-end="url(#ah)"/>
+            <path d="M615 332 H656" class="edge" marker-end="url(#ah)"/>
+            <path d="M845 332 H876" class="edge" marker-end="url(#ah)"/>
+            <path d="M752 388 V412 H560 V392" class="edge-loop" marker-end="url(#ahA)"/>
+            <text x="606" y="430" class="tn" style="font-size:11px;font-weight:500">next iteration</text>
+
+            <rect x="430" y="434" width="110" height="42" rx="6" class="box-real"/>
+            <text x="442" y="452" class="tr">Real X-ray</text><text x="442" y="468" class="t2">unannotated</text>
+            <path d="M485 434 V392" class="edge" marker-end="url(#ah)"/>
+          </svg>
+        </div>
+        <br>
+
+        <!-- Stage 1 -->
+        <h3 class="title is-4">1. Data preprocessing and route extraction</h3>
+        <div class="content has-text-justified">
+          <p>
+            Two CT angiography sources are used. The 4D CTA dataset provides motion over a full cardiac cycle,
+            and the ASOCA dataset provides anatomical variety. For 4D CTA, the heart, vessels and coronary
+            arteries are segmented with TotalSegmentator <a class="cite" href="#ref-4">[4]</a>, the volume is cropped to the chest to reduce GPU
+            memory, the coronary masks are cleaned and centerlines are extracted. Each centerline is converted
+            into a graph, and routes between terminal points are searched; only routes long enough to traverse
+            a vessel are kept and categorized as left or right coronary tree.
+          </p>
+        </div>
+        <div class="fig-grid g2">
+          <figure class="cover"><img src="./static/images/cta-4d-render.webp" alt="Volume rendering of a 4D CTA chest scan" loading="lazy"><figcaption>4D CTA volume, one of 20 phases</figcaption></figure>
+          <figure class="cover"><img src="./static/images/cta-asoca-render.webp" alt="Volume rendering of an ASOCA CTA scan" loading="lazy"><figcaption>ASOCA volume</figcaption></figure>
+        </div>
+        <div class="fig-grid g4">
+          <figure class="sq"><img src="./static/images/seg-heart.webp" alt="Segmented heart chambers" loading="lazy"><figcaption>Heart segmentation</figcaption></figure>
+          <figure class="sq"><img src="./static/images/seg-vessels.webp" alt="All segmented vessels" loading="lazy"><figcaption>All vessels</figcaption></figure>
+          <figure class="sq"><img src="./static/images/seg-coronary.webp" alt="Left and right coronary artery trees" loading="lazy"><figcaption>Coronary arteries</figcaption></figure>
+          <figure class="sq"><img src="./static/images/seg-route.webp" alt="One route along the left coronary centerline" loading="lazy"><figcaption>Extracted route</figcaption></figure>
+        </div>
+        <br>
+
+        <!-- Stage 2 -->
+        <h3 class="title is-4">2. Registration and heart motion</h3>
+        <div class="content has-text-justified">
+          <p>
+            Each of the 20 phases of a 4D CTA sequence is registered to the first phase with elastix <a class="cite" href="#ref-5">[5]</a>, using a
+            B-spline free-form deformation with a 16-voxel control-point spacing and up to 500 iterations.
+            Transformix converts each result into a dense deformation field. Because ASOCA volumes are static,
+            each ASOCA scan is rigidly registered to a 4D CTA reference and the 4D deformation fields are
+            transferred to it, producing pseudo-temporal sequences with realistic cardiac motion.
+          </p>
+        </div>
+        <div class="fig-grid g3">
+          <figure><img src="./static/images/def-axial.webp" alt="Axial slice with deformation grid" loading="lazy"><figcaption>Axial</figcaption></figure>
+          <figure><img src="./static/images/def-coronal.webp" alt="Coronal slice with deformation grid" loading="lazy"><figcaption>Coronal</figcaption></figure>
+          <figure><img src="./static/images/def-sagittal.webp" alt="Sagittal slice with deformation grid" loading="lazy"><figcaption>Sagittal</figcaption></figure>
+        </div>
+        <p class="fig-cap">Deformation field between two cardiac phases. Warm grid lines mark the largest displacement around the heart.</p>
+        <br>
+
+        <!-- Stage 3 -->
+        <h3 class="title is-4">3. DRR sequence generation</h3>
+        <div class="content has-text-justified">
+          <p>
+            At each time step, the guidewire tip is advanced along a route and inserted into the volume as
+            tungsten. The current deformation field is applied to both anatomy and wire, and DiffDeepDRR <a class="cite" href="#ref-3">[3]</a> projects
+            the volume into a DRR with a realistic X-ray spectrum and C-arm geometry. Each route is rendered from
+            7 clinical viewing angles for the left coronary tree and 4 for the right. Volumes are resampled to
+            0.4 mm, since coarser spacing fragments the thin wire. Every frame is produced together with its
+            guidewire mask, so annotations are obtained without manual annotation.
+          </p>
+          <p>
+            Some viewing angles hide or foreshorten the wire into implausible shapes, which would introduce false
+            positives during training. All sequences were therefore reviewed manually and 258 were discarded. The
+            remaining sequences were resampled to 15 evenly spaced frames each and split by sequence to avoid
+            leakage between training and evaluation.
+          </p>
+        </div>
+        <div class="video-grid g2">
+          <figure><video poster="./static/videos/drr_4dcta.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/drr_4dcta.mp4" aria-label="Simulated sequence from 4D CTA"></video><figcaption><b>4D CTA</b>Guidewire advancing with native heart motion</figcaption></figure>
+          <figure><video poster="./static/videos/drr_asoca.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/drr_asoca.mp4" aria-label="Simulated sequence from ASOCA"></video><figcaption><b>ASOCA</b>Static scan with transferred heart motion</figcaption></figure>
+        </div>
+        <div class="funnel" aria-label="Dataset funnel">
+          <div class="step"><div class="label">Rendered<small>951 sequences</small></div><div><div class="bar" style="width:72%"><span>173,973 frames</span></div></div></div>
+          <div class="step"><div class="label">After manual review<small>693 sequences, 258 discarded</small></div><div><div class="bar" style="width:45.8%"><span>&gt;110,000 frames</span></div></div></div>
+          <div class="step"><div class="label">Resampled<small>15 frames per sequence</small></div><div><div class="bar" style="width:4.3%"><span>10,365 frames, split 60/20/20</span></div></div></div>
+        </div>
+        <br>
+
+        <!-- Stage 4 -->
+        <h3 class="title is-4">4. Detection and tracking models</h3>
+        <div class="content has-text-justified">
+          <p>
+            Both models follow the tracking-by-detection paradigm and represent opposite ends of the speed and
+            accuracy trade-off.
+          </p>
+          <ul>
+            <li>
+              <b>YOLOv8n + BoT-SORT.</b> A one-stage detector, the smallest of the YOLOv8 family. With a single
+              class and one or two objects per frame, larger variants increase training and inference time
+              without a clear accuracy gain. BoT-SORT associates detections over time with a Kalman filter and
+              IoU matching; its thresholds were tuned for a thin, faint object, with 0.6 for the first
+              association pass and 0.4 for a fallback pass that recovers weak detections.
+            </li>
+            <li>
+              <b>QDTrack.</b> A Faster R-CNN detector with a ResNet-50 backbone and quasi-dense appearance
+              embeddings learned across neighbouring frames. Higher detection quality at a much lower speed.
+            </li>
+          </ul>
+        </div>
+        <div class="table-container">
+          <table class="table is-fullwidth is-narrow">
+            <thead><tr><th>Model</th><th>Trained on</th><th class="n">HOTA</th><th class="n">MOTA</th><th class="n">IDF1</th><th class="n">FPS</th></tr></thead>
+            <tbody>
+              <tr><td>YOLOv8n + BoT-SORT</td><td>Synthetic</td><td class="n">79.1</td><td class="n">97.7</td><td class="n">98.8</td><td class="n">~80</td></tr>
+              <tr><td>QDTrack</td><td>Synthetic</td><td class="n">90.6</td><td class="n">97.7</td><td class="n">98.8</td><td class="n">~10</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-cap">In-domain results on the synthetic test split.</p>
+        <div class="content has-text-justified">
+          <p>
+            QDTrack achieves a higher HOTA, but its inference speed of about 10 FPS is too low for live
+            fluoroscopy. The domain adaptation pipeline is therefore built on YOLOv8, which runs at about 80 FPS.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Domain adaptation -->
+    <div class="columns is-centered" id="adaptation">
+      <div class="column is-full-width">
+        <h2 class="title is-3">5. Unsupervised domain adaptation pipeline</h2>
+        <div class="content has-text-justified">
+          <p>
+            Trained on raw DRRs, the tracker drops from HOTA 79.1 on synthetic data to 56.3 on the real
+            single-guidewire set and to 25.3 on the double-guidewire set. DRRs differ from real fluoroscopy in
+            noise, contrast and intensity distribution. Since the trackers associate frame-wise detections,
+            the domain gap is addressed at the detection stage: a more robust detector directly yields more
+            consistent trajectories. The proposed pipeline combines domain augmentation with iterative
+            pseudo-labelling and requires no real annotations.
+          </p>
+        </div>
+        <div class="diagram" role="img" aria-label="Domain adaptation pipeline. Annotated simulation images pass through a domain augmentation module (Fourier Domain Adaptation, Gaussian noise, gamma correction) and train a YOLOv8 detector. The detector runs on unannotated real X-ray frames; detections with confidence of at least 0.9 become pseudo labels, which are used to fine-tune the detector iteratively for ten iterations. Detection rate and average confidence are tracked per iteration to select the best model, which is combined with BoT-SORT for tracking.">
+          <svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow"/></marker>
+              <marker id="ahA2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow-acc"/></marker>
+              <clipPath id="cA"><rect x="20" y="200" width="130" height="130" rx="8"/></clipPath>
+              <clipPath id="cB"><rect x="400" y="200" width="130" height="130" rx="8"/></clipPath>
+              <clipPath id="cC"><rect x="575" y="16" width="130" height="130" rx="8"/></clipPath>
+              <clipPath id="cD"><rect x="790" y="200" width="130" height="130" rx="8"/></clipPath>
+            </defs>
+
+            <!-- annotated simulation data -->
+            <image href="static/images/da-base.webp" x="20" y="200" width="130" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#cA)"/>
+            <rect x="20" y="200" width="130" height="130" rx="8" class="thumb"/>
+            <text x="85" y="350" class="t" text-anchor="middle">Annotated</text>
+            <text x="85" y="366" class="t2" text-anchor="middle">simulation data (DRR)</text>
+            <path d="M150 265 H186" class="edge" marker-end="url(#ah2)"/>
+
+            <!-- DA module -->
+            <rect x="190" y="205" width="170" height="120" rx="6" class="box-u"/>
+            <text x="275" y="230" class="t" text-anchor="middle">Domain augmentation</text>
+            <text x="275" y="256" class="t2" text-anchor="middle">Fourier Domain Adaptation</text>
+            <text x="275" y="274" class="t2" text-anchor="middle">Gaussian noise</text>
+            <text x="275" y="292" class="t2" text-anchor="middle">Gamma correction</text>
+            <text x="275" y="313" class="t2" text-anchor="middle" style="font-style:italic">applied to 30% of DRRs</text>
+            <path d="M360 265 H396" class="edge" marker-end="url(#ah2)"/>
+
+            <!-- augmented data -->
+            <image href="static/images/da-augmented.webp" x="400" y="200" width="130" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#cB)"/>
+            <rect x="400" y="200" width="130" height="130" rx="8" class="thumb"/>
+            <text x="465" y="350" class="t" text-anchor="middle">Domain-augmented</text>
+            <text x="465" y="366" class="t2" text-anchor="middle">annotated data</text>
+            <path d="M530 265 H576" class="edge" marker-end="url(#ah2)"/>
+            <text x="553" y="256" class="t2" text-anchor="middle">train</text>
+
+            <!-- real unannotated -->
+            <image href="static/images/da-real.webp" x="575" y="16" width="130" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#cC)"/>
+            <rect x="575" y="16" width="130" height="130" rx="8" class="thumb-real"/>
+            <text x="718" y="70" class="tr">Unannotated real X-ray</text>
+            <text x="718" y="88" class="t2">3,770 frames, no annotations</text>
+            <path d="M640 146 V226" class="edge" marker-end="url(#ah2)"/>
+            <text x="648" y="192" class="t2">inference</text>
+
+            <!-- detector -->
+            <rect x="580" y="230" width="120" height="70" rx="6" class="box-acc"/>
+            <text x="640" y="260" class="t" text-anchor="middle">YOLOv8n</text>
+            <text x="640" y="280" class="t2" text-anchor="middle">detector</text>
+            <path d="M700 265 H786" class="edge" marker-end="url(#ah2)"/>
+            <text x="743" y="256" class="t2" text-anchor="middle">conf ≥ 0.9</text>
+
+            <!-- pseudo labels -->
+            <image href="static/images/single-guidewire_yolo-drr-da-pl.webp" x="790" y="200" width="130" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#cD)"/>
+            <rect x="790" y="200" width="130" height="130" rx="8" class="thumb"/>
+            <text x="855" y="350" class="t" text-anchor="middle">Pseudo labels</text>
+            <text x="855" y="366" class="t2" text-anchor="middle">grow every iteration</text>
+
+            <!-- loop -->
+            <path d="M855 374 V400 H640 V304" class="edge-loop" marker-end="url(#ahA2)"/>
+            <text x="652" y="418" class="tn" style="font-weight:600">fine-tune on pseudo labels only, 10 iterations</text>
+
+            <!-- monitor -->
+            <path d="M640 400 V436" class="edge" stroke-dasharray="3 3" marker-end="url(#ah2)"/>
+            <rect x="520" y="440" width="240" height="68" rx="6" class="box-u"/>
+            <text x="640" y="462" class="t" text-anchor="middle">Model selection</text>
+            <text x="640" y="481" class="t2" text-anchor="middle">detection rate and average confidence</text>
+            <text x="640" y="497" class="t2" text-anchor="middle">per iteration, best iteration kept</text>
+            <path d="M760 474 H806" class="edge" marker-end="url(#ah2)"/>
+
+            <!-- output -->
+            <rect x="810" y="444" width="170" height="60" rx="6" class="box-u"/>
+            <text x="895" y="469" class="t" text-anchor="middle">Final tracker</text>
+            <text x="895" y="488" class="t2" text-anchor="middle">YOLOv8n + BoT-SORT</text>
+          </svg>
+        </div>
+
+        <br>
+
+        <h4 class="title is-5">Domain augmentation</h4>
+        <div class="switcher-panel">
+          <div class="columns is-vcentered">
+            <div class="column is-half">
+              <div class="switcher-stage" id="da-stage">
+                <img src="./static/images/da-base.webp" alt="Base synthetic X-ray" data-k="base" width="512" height="512">
+                <img src="./static/images/da-augmented.webp" alt="Synthetic X-ray after domain augmentation" data-k="aug" width="512" height="512" hidden>
+                <img src="./static/images/da-real.webp" alt="Real clinical X-ray frame" data-k="real" width="512" height="512" hidden>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="buttons has-addons" role="group" aria-label="Choose image">
+                <button type="button" class="button is-small is-selected" data-da="base" aria-pressed="true">Base DRR</button>
+                <button type="button" class="button is-small" data-da="aug" aria-pressed="false">Augmented</button>
+                <button type="button" class="button is-small" data-da="real" aria-pressed="false">Real X-ray</button>
+              </div>
+              <p class="switcher-desc" id="da-desc"></p>
+            </div>
+          </div>
+        </div>
+        <div class="content has-text-justified">
+          <p>
+            Three lightweight, training-free transforms bring the synthetic images closer to the target domain.
+            Fourier Domain Adaptation <a class="cite" href="#ref-8">[8]</a> transfers the low-frequency spectrum of real X-ray frames (one reference
+            frame per real sequence) onto DRRs, Gaussian noise imitates sensor noise, and gamma correction varies
+            brightness and contrast. The augmentations are applied to 30% of the training set, which preserves
+            the original DRRs while adding examples that reflect the characteristics of the target domain.
+          </p>
+        </div>
+
+        <h4 class="title is-5">Iterative pseudo-labelling</h4>
+        <div class="content has-text-justified">
+          <p>
+            The detector trained on augmented DRRs is applied to 3,770 unannotated frames from the training split
+            of the single-guidewire dataset. Only detections with a confidence of at least 0.9 are accepted as
+            pseudo labels. The detector is then fine-tuned on these pseudo-labelled real frames only, without
+            merging the simulation data back in, and the cycle is repeated for 10 iterations. Pseudo labels from
+            earlier iterations are carried over, and each iteration only annotates frames that have not been
+            annotated yet, so the model progresses from easy to harder examples. Training stops early when the
+            validation performance does not improve for five epochs.
+          </p>
+          <p>
+            The number of pseudo-labelled frames and their average confidence are monitored at every iteration.
+            The last iteration annotates the largest share of the target data while keeping high confidence, and
+            is therefore selected as the final model.
+          </p>
+        </div>
+        <figure class="pl-charts" id="pl-charts" aria-label="Pseudo-labelling statistics per iteration">
+          <div class="pl-chart" data-series="count"></div>
+          <div class="pl-chart" data-series="conf"></div>
+          <p class="fig-cap">Pseudo-labelled frames and their average confidence per iteration. The number of pseudo labels grows from about 970 to about 2,740 of 3,770 frames while the average confidence stays above the 0.9 threshold. Hover a point for its value.</p>
+        </figure>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="columns is-centered" id="metrics">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Evaluation metrics</h2>
+        <div class="content has-text-justified">
+          <p>
+            Tracking accuracy is measured with TrackEval using three complementary multi-object tracking metrics.
+            Inference speed is reported in frames per second (FPS) on the same GPU for all models.
+          </p>
+        </div>
+        <div class="columns metric-cards">
+          <div class="column">
+            <div class="box">
+              <h3 class="title is-5">HOTA <a class="cite" href="#ref-9">[9]</a></h3>
+              <p class="formula"><math display="block"><mrow><msub><mtext>HOTA</mtext><mi>α</mi></msub><mo>=</mo><msqrt><mrow><msub><mtext>DetA</mtext><mi>α</mi></msub><mo>·</mo><msub><mtext>AssA</mtext><mi>α</mi></msub></mrow></msqrt></mrow></math></p>
+              <p class="formula"><math display="block"><mrow><mtext>HOTA</mtext><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup><msub><mtext>HOTA</mtext><mi>α</mi></msub><mspace width="0.2em"/><mi>d</mi><mi>α</mi><mo>≈</mo><mfrac><mn>1</mn><mn>19</mn></mfrac><munder><mo>∑</mo><mrow><mi>α</mi><mo>∈</mo><mo>{</mo><mn>0.05</mn><mo>,</mo><mn>0.1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mn>0.95</mn><mo>}</mo></mrow></munder><msub><mtext>HOTA</mtext><mi>α</mi></msub></mrow></math></p>
+              <p>Higher Order Tracking Accuracy jointly evaluates detection, association and localization, averaged over localization thresholds α. It is the primary metric in recent tracking work.</p>
+            </div>
+          </div>
+          <div class="column">
+            <div class="box">
+              <h3 class="title is-5">MOTA <a class="cite" href="#ref-10">[10]</a></h3>
+              <p class="formula"><math display="block"><mrow><mtext>MOTA</mtext><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msub><mo>∑</mo><mi>t</mi></msub><mo>(</mo><msub><mtext>FN</mtext><mi>t</mi></msub><mo>+</mo><msub><mtext>FP</mtext><mi>t</mi></msub><mo>+</mo><msub><mtext>IDSW</mtext><mi>t</mi></msub><mo>)</mo></mrow><mrow><msub><mo>∑</mo><mi>t</mi></msub><msub><mtext>GT</mtext><mi>t</mi></msub></mrow></mfrac></mrow></math></p>
+              <p>Multiple Object Tracking Accuracy counts false negatives, false positives and identity switches relative to the number of ground-truth objects. It is highly sensitive to detection quality and can become negative.</p>
+            </div>
+          </div>
+          <div class="column">
+            <div class="box">
+              <h3 class="title is-5">IDF1 <a class="cite" href="#ref-11">[11]</a></h3>
+              <p class="formula"><math display="block"><mrow><mtext>IDF1</mtext><mo>=</mo><mfrac><mrow><mn>2</mn><mo>·</mo><mtext>IDTP</mtext></mrow><mrow><mn>2</mn><mo>·</mo><mtext>IDTP</mtext><mo>+</mo><mtext>IDFP</mtext><mo>+</mo><mtext>IDFN</mtext></mrow></mfrac></mrow></math></p>
+              <p>The ratio of correctly identified detections over the average number of ground-truth and predicted detections. It measures how consistently identities are maintained over time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="columns is-centered" id="results">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Results</h2>
+        <div class="content has-text-justified">
+          <p>
+            Evaluation is performed on two real datasets. The test split of the single-guidewire dataset was
+            never used during training. The double-guidewire dataset was excluded from training and
+            pseudo-labelling entirely and serves as a test of cross-dataset generalization. The explorer below
+            shows the contribution of each component of the pipeline.
+          </p>
+        </div>
+
+        <div class="explorer" id="explorer">
+          <div class="controls">
+            <div class="buttons has-addons" role="group" aria-label="Test set" style="margin-bottom:0">
+              <button type="button" class="button is-small is-selected" data-set="single" aria-pressed="true">Single guidewire</button>
+              <button type="button" class="button is-small" data-set="double" aria-pressed="false">Double guidewire, unseen</button>
+            </div>
+            <label class="toggle"><input type="checkbox" id="t-da"> Domain augmentation</label>
+            <label class="toggle"><input type="checkbox" id="t-pl"> Pseudo-labelling</label>
+          </div>
+          <div class="columns">
+            <div class="column is-5">
+              <div class="frame"><video poster="./static/videos/single_base.webp" id="ex-vid" autoplay muted loop playsinline src="./static/videos/single_base.mp4" style="width:100%;height:100%;object-fit:cover;display:block"></video></div>
+            </div>
+            <div class="column">
+              <p class="cfg" id="ex-cfg"></p>
+              <div id="ex-metrics"></div>
+              <p class="note"><i></i>Same tracker trained on annotated real X-ray, for reference</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="title is-4">Comparison with models trained on annotated real data</h3>
+        <div class="content has-text-justified">
+          <p>
+            The baselines are trained on the annotated training split of the single-guidewire dataset. The
+            proposed pipeline uses the same frames without their annotations.
+          </p>
+        </div>
+        <div class="table-container">
+          <table class="table is-fullwidth is-narrow">
+            <thead><tr><th>Model</th><th>Training data</th><th class="n">HOTA</th><th class="n">MOTA</th><th class="n">IDF1</th><th class="n">FPS</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="6">Single-guidewire test set</td></tr>
+              <tr><td>YOLOv8n + BoT-SORT</td><td>Annotated real X-ray</td><td class="n">73.0</td><td class="n">83.9</td><td class="n">91.7</td><td class="n">~80</td></tr>
+              <tr><td>QDTrack</td><td>Annotated real X-ray</td><td class="n">85.1</td><td class="n">93.1</td><td class="n">94.1</td><td class="n">~10</td></tr>
+              <tr class="ours"><td>Proposed UDA pipeline</td><td>DRR + unannotated real X-ray</td><td class="n">76.7</td><td class="n">92.5</td><td class="n">96.2</td><td class="n">~80</td></tr>
+              <tr class="group"><td colspan="6">Double-guidewire dataset, not used in training</td></tr>
+              <tr><td>YOLOv8n + BoT-SORT</td><td>Annotated real X-ray</td><td class="n">62.0</td><td class="n">71.4</td><td class="n">81.9</td><td class="n">~80</td></tr>
+              <tr><td>QDTrack</td><td>Annotated real X-ray</td><td class="n">70.4</td><td class="n">86.7</td><td class="n">89.4</td><td class="n">~10</td></tr>
+              <tr class="ours"><td>Proposed UDA pipeline</td><td>DRR + unannotated real X-ray</td><td class="n">70.8</td><td class="n">87.4</td><td class="n">93.3</td><td class="n">~80</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-cap">Metrics as defined in <a href="#metrics">Evaluation metrics</a>, computed with TrackEval.</p>
+
+        <h4 class="title is-5">Single-guidewire test sequence</h4>
+        <div class="video-grid g3">
+          <figure><video poster="./static/videos/single_yolo_real.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/single_yolo_real.mp4"></video><figcaption><b>YOLOv8n, annotated real data</b>~80 FPS</figcaption></figure>
+          <figure><video poster="./static/videos/single_qdtrack_real.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/single_qdtrack_real.mp4"></video><figcaption><b>QDTrack, annotated real data</b>~10 FPS</figcaption></figure>
+          <figure><video poster="./static/videos/single_dapl.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/single_dapl.mp4"></video><figcaption><b>Proposed UDA pipeline</b>No real annotations, ~80 FPS</figcaption></figure>
+        </div>
+        <h4 class="title is-5">Double-guidewire sequence (unseen dataset)</h4>
+        <div class="video-grid g3">
+          <figure><video poster="./static/videos/double_yolo_real.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/double_yolo_real.mp4"></video><figcaption><b>YOLOv8n, annotated real data</b>~80 FPS</figcaption></figure>
+          <figure><video poster="./static/videos/double_qdtrack_real.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/double_qdtrack_real.mp4"></video><figcaption><b>QDTrack, annotated real data</b>~10 FPS</figcaption></figure>
+          <figure><video poster="./static/videos/double_dapl.webp" autoplay muted loop playsinline preload="metadata" src="./static/videos/double_dapl.mp4"></video><figcaption><b>Proposed UDA pipeline</b>No real annotations, ~80 FPS</figcaption></figure>
+        </div>
+
+        <div class="content has-text-justified">
+          <p>
+            On the single-guidewire test set, the adapted YOLOv8 tracker outperforms the same tracker trained on
+            annotated real data in all three metrics. QDTrack retains a higher HOTA at roughly one eighth of the
+            speed. On the unseen double-guidewire dataset, the proposed pipeline matches QDTrack in HOTA and
+            achieves the highest MOTA and IDF1 of all models. The stronger generalization is attributed to the
+            variety of the simulated data, which covers far more anatomies, viewing angles and motion patterns
+            than the small set of annotated real sequences.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discussion -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Discussion</h2>
+        <div class="content has-text-justified">
+          <ul>
+            <li><b>Simple augmentations are effective.</b> Training-free transforms alone raised the double-guidewire HOTA from 25.3 to 62.4.</li>
+            <li><b>Pseudo-labelling is the strongest single component.</b> A strict 0.9 confidence threshold slows the first iterations but prevents the model from reinforcing its own errors.</li>
+            <li><b>Manual quality control remains necessary.</b> Implausible renders could be identified reliably only by visual inspection, and removing them kept false positives out of training.</li>
+            <li><b>Deployment constraints shape the architecture.</b> Although QDTrack scores higher in-domain, real-time operation requires the faster YOLOv8 tracker.</li>
+            <li><b>Simulated variety supports generalization.</b> Models trained on simulated data with domain adaptation generalize to an unseen dataset better than models trained on a limited annotated real dataset.</li>
+          </ul>
+        </div>
+        <h3 class="title is-4">Future work</h3>
+        <div class="content has-text-justified">
+          <ul>
+            <li>Increase simulation realism by rendering the guidewire body, sheath, stents and contrast agent injection.</li>
+            <li>Apply deformation fields across more CTA datasets to simulate a wider range of patient-specific motion.</li>
+            <li>Explore diffusion-based image translation to further reduce the domain gap.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- References -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Acknowledgements and references</h2>
+        <div class="content has-text-justified">
+          <p>
+            Supervised by Prof. Dr. Nassir Navab and advised by Baochang Zhang at the Chair for Computer Aided
+            Medical Procedures, Technical University of Munich. Real X-ray sequences are from clinical datasets
+            used within the research collaboration.
+          </p>
+          <ol style="font-size:0.9rem;color:#555">
+            <li id="ref-1">R. Gharleghi et al. Automated segmentation of normal and diseased coronary arteries: the ASOCA challenge. <i>Computerized Medical Imaging and Graphics</i>, 97, 2022.</li>
+            <li id="ref-2">M. Unberath, J.-N. Zaech, S. C. Lee, B. Bier, J. Fotouhi, M. Armand and N. Navab. DeepDRR: a catalyst for machine learning in fluoroscopy-guided procedures. <i>MICCAI</i>, 2018.</li>
+            <li id="ref-3">B. Zhang, S. Faghihroohi, M. F. Azampour, S. Liu, R. Ghotbi, H. Schunkert and N. Navab. A patient-specific self-supervised model for automatic X-ray/CT registration. In: <i>Medical Image Computing and Computer Assisted Intervention – MICCAI 2023</i>. Springer Nature Switzerland, 2023, pp. 515–524.</li>
+            <li id="ref-4">J. Wasserthal et al. TotalSegmentator: robust segmentation of 104 anatomic structures in CT images. <i>Radiology: Artificial Intelligence</i>, 5(5), 2023.</li>
+            <li id="ref-5">S. Klein, M. Staring, K. Murphy, M. A. Viergever and J. P. W. Pluim. elastix: a toolbox for intensity-based medical image registration. <i>IEEE Transactions on Medical Imaging</i>, 29(1), 2010.</li>
+            <li id="ref-6">N. Aharon, R. Orfaig and B.-Z. Bobrovsky. BoT-SORT: robust associations multi-pedestrian tracking. arXiv:2206.14651, 2022.</li>
+            <li id="ref-7">T. Fischer et al. QDTrack: quasi-dense similarity learning for appearance-only multiple object tracking. <i>IEEE TPAMI</i>, 45(12), 2023.</li>
+            <li id="ref-8">Y. Yang and S. Soatto. FDA: Fourier domain adaptation for semantic segmentation. <i>CVPR</i>, 2020.</li>
+            <li id="ref-9">J. Luiten et al. HOTA: a higher order metric for evaluating multi-object tracking. <i>International Journal of Computer Vision</i>, 129(2), 2021.</li>
+            <li id="ref-10">K. Bernardin and R. Stiefelhagen. Evaluating multiple object tracking performance: the CLEAR MOT metrics. <i>EURASIP Journal on Image and Video Processing</i>, 2008.</li>
+            <li id="ref-11">E. Ristani, F. Solera, R. Zou, R. Cucchiara and C. Tomasi. Performance measures and a data set for multi-target, multi-camera tracking. <i>ECCV Workshops</i>, 2016.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="./static/pdfs/Imamoglu_MSc_Thesis.pdf" aria-label="Thesis PDF"><i class="fas fa-file-pdf"></i></a>
+      <a class="icon-link" href="https://github.com/OguzKaanImamoglu" aria-label="GitHub"><i class="fab fa-github"></i></a>
+      <a class="icon-link" href="https://www.linkedin.com/in/oguz-kaan-imamoglu/" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered" style="font-size:0.9rem">
+          <p>
+            Website template adapted from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>,
+            licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="./static/js/index.js"></script>
+</body>
+</html>

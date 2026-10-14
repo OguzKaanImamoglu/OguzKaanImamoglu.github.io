@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Oğuz Kaan İmamoğlu, software engineer in Munich. Backend and data systems in production, Palamedes Arena (a live MCP benchmark for AI agents), and a TUM master's thesis on guidewire tracking trained on simulated X-rays.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oğuz Kaan İmamoğlu</title>
+  <meta property="og:title" content="Oğuz Kaan İmamoğlu">
+  <meta property="og:image" content="static/images/da-augmented.webp">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item brand" href="index.html">Oğuz Kaan İmamoğlu</a>
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="nav-menu">
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu" id="nav-menu">
+    <div class="navbar-end">
+      <a class="navbar-item" href="#work">Work</a>
+      <a class="navbar-item" href="#experience">Experience</a>
+      <a class="navbar-item" href="#activities">Activities</a>
+      <a class="navbar-item" href="#education">Education</a>
+      <a class="navbar-item" href="#skills">Skills</a>
+      <a class="navbar-item" href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== Hero ===== -->
+<section class="hero home-hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <h1 class="title is-1 publication-title">Oğuz Kaan İmamoğlu</h1>
+      <p class="lede">
+        Full-stack software engineer based in Munich, with an interest in AI and data-intensive systems.
+        B.Sc. in Computer Science from Bilkent University and M.Sc. in Informatics from the Technical
+        University of Munich.
+      </p>
+      <div class="publication-links" style="margin-top:1.5rem">
+        <span class="link-block">
+          <a href="./static/pdfs/Oguz_Kaan_Imamoglu_Resume.pdf" class="button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Resume</span>
+          </a>
+        </span>
+        <span class="link-block">
+          <a href="https://github.com/OguzKaanImamoglu" class="external-link button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fab fa-github"></i></span><span>GitHub</span>
+          </a>
+        </span>
+        <span class="link-block">
+          <a href="https://www.linkedin.com/in/oguz-kaan-imamoglu/" class="external-link button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fab fa-linkedin"></i></span><span>LinkedIn</span>
+          </a>
+        </span>
+        <span class="link-block">
+          <a href="mailto:oguz.k.imamoglu@gmail.com" class="button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fas fa-envelope"></i></span><span>Email</span>
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Selected work ===== -->
+<section class="hero is-light is-small" id="work">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Selected work</h2>
+      <div class="work-slider" id="work-slider" aria-roledescription="carousel">
+        <button class="ws-btn prev" aria-label="Previous project"><i class="fas fa-chevron-left"></i></button>
+        <div class="work-track" id="work-track">
+        <div class="work-card work-slide">
+        <div class="columns is-gapless">
+          <div class="column is-5">
+            <a href="palamedes.html" aria-label="Open the Palamedes Arena project page" style="display:block;height:100%">
+              <div class="pa-card-visual">
+                <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#F2F4F7"/><circle cx="25" cy="18" r="5.2" fill="#121826"/><circle cx="39" cy="18" r="5.2" fill="#121826"/><circle cx="25" cy="32" r="5.2" fill="#121826"/><circle cx="39" cy="32" r="5.2" fill="#121826"/><circle cx="25" cy="46" r="5.2" fill="#F59E0B"/></svg>
+                <div class="pa-card-name">Palamedes Arena</div>
+                <div class="pa-card-tools">list_games · start_run<br>observe ⟳ act<br>get_leaderboard</div>
+              </div>
+            </a>
+          </div>
+          <div class="column">
+            <div class="work-body">
+              <p class="is-size-7 has-text-grey" style="margin-bottom:.4rem">Personal project, live in production since October 2026</p>
+              <h3 class="title is-4" style="margin-bottom:.75rem"><a href="palamedes.html" style="color:#222">Palamedes Arena: daily puzzles for AI agents</a></h3>
+              <p>
+                A playground and live benchmark where AI agents play fresh daily puzzles through an
+                OAuth-protected MCP server and compete on public leaderboards. House agents from Anthropic and
+                OpenAI play every day, and every game can be replayed move by move.
+              </p>
+              <dl class="facts">
+                <div><dt>Players</dt><dd>Any MCP client</dd></div>
+                <div><dt>Games</dt><dd>3 daily puzzles, new every day</dd></div>
+                <div><dt>House agents</dt><dd>Claude and GPT models</dd></div>
+                <div><dt>Status</dt><dd>Live in production</dd></div>
+              </dl>
+              <div class="buttons" style="margin-top:1.25rem">
+                <a href="palamedes.html" class="button is-dark is-rounded">
+                  <span class="icon"><i class="fas fa-arrow-right"></i></span><span>Project page</span>
+                </a>
+                <a href="https://www.palamedesarena.com" class="button is-rounded">
+                  <span class="icon"><i class="fas fa-external-link-alt"></i></span><span>Live site</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        <div class="work-card work-slide">
+        <div class="columns is-gapless">
+          <div class="column is-5">
+            <a href="thesis.html" aria-label="Open the thesis project page">
+              <video autoplay muted loop playsinline poster="./static/videos/double_dapl.webp" src="./static/videos/double_dapl.mp4" aria-label="Two guidewires tracked with separate IDs on an X-ray sequence" style="width:100%;height:100%;object-fit:cover;aspect-ratio:1;display:block"></video>
+            </a>
+          </div>
+          <div class="column">
+            <div class="work-body">
+              <p class="is-size-7 has-text-grey" style="margin-bottom:.4rem">Master's thesis, TU Munich, 2025</p>
+              <h3 class="title is-4" style="margin-bottom:.75rem"><a href="thesis.html" style="color:#222">Generalizing Tracking Models under Sim-to-Real Domain Shift for Guidewire Tracking in X-ray Fluoroscopy</a></h3>
+              <p>
+                Annotated clinical X-ray sequences are scarce. This thesis generates synthetic fluoroscopy
+                sequences from CT angiography scans, with a moving guidewire and simulated cardiac motion,
+                trains detection and tracking models on them, and closes the sim-to-real gap with an
+                unsupervised domain adaptation pipeline based on domain augmentation and iterative
+                pseudo-labelling.
+              </p>
+              <dl class="facts">
+                <div><dt>Synthetic sequences generated</dt><dd>951</dd></div>
+                <div><dt>Annotated real frames used for training</dt><dd>0</dd></div>
+                <div><dt>Tracking accuracy on real X-ray (HOTA)</dt><dd>56.3 → 76.7</dd></div>
+                <div><dt>Inference speed</dt><dd>~80 FPS</dd></div>
+              </dl>
+              <a href="thesis.html" class="button is-dark is-rounded" style="margin-top:1.25rem">
+                <span class="icon"><i class="fas fa-arrow-right"></i></span><span>Project page</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
+        <button class="ws-btn next" aria-label="Next project"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="ws-dots" id="ws-dots"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Experience -->
+    <div class="columns is-centered" id="experience">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Experience</h2>
+
+        <div class="exp-company">
+          <div class="exp-head">
+            <div class="exp-name">Taico GmbH</div>
+            <div class="exp-meta">2 yrs 1 mo &middot; Munich, Germany &middot; On-site</div>
+          </div>
+          <div class="exp-roles">
+            <div class="exp-role">
+              <div class="role">Software Engineer</div>
+              <div class="exp-meta">Full-time &middot; Oct 2025 – Apr 2026 &middot; 7 mos</div>
+              <p>Full-stack development of data-intensive, AI-powered production systems.</p>
+              <ul class="exp-bullets">
+                <li>Built backend services, REST APIs and data pipelines with Python, PostgreSQL and GCP.</li>
+                <li>Processed 1M+ row client datasets with BigQuery, Cloud SQL and Cloud Run, and redesigned a legacy data extraction pipeline for a 20× speedup with fully automated execution.</li>
+                <li>Contributed to an AI analytics product built on LLM APIs and RAG, and maintained CI/CD pipelines with GitHub Actions.</li>
+                <li>Worked directly with enterprise clients to turn their requirements into production features.</li>
+              </ul>
+              <div class="tags stack"><span class="tag">Python</span><span class="tag">PostgreSQL</span><span class="tag">BigQuery</span><span class="tag">Cloud Run</span><span class="tag">Cloud SQL</span><span class="tag">GitHub Actions</span><span class="tag">Grafana</span></div>
+            </div>
+            <div class="exp-role">
+              <div class="role">Working Student – Software Engineer</div>
+              <div class="exp-meta">Part-time &middot; Oct 2024 – Oct 2025 &middot; 1 yr</div>
+              <p>
+                Full-stack software engineer in a small startup team. Built backend services and REST APIs with
+                Python and Flask, and React dashboards for an enterprise media transparency platform, deployed with Docker.
+              </p>
+              <div class="tags stack"><span class="tag">Python</span><span class="tag">Flask</span><span class="tag">JavaScript</span><span class="tag">React</span><span class="tag">REST APIs</span><span class="tag">Docker</span></div>
+            </div>
+            <div class="exp-role">
+              <div class="role">Interdisciplinary Project Student</div>
+              <div class="exp-meta">Work study &middot; Apr 2024 – Oct 2024 &middot; 6 mos</div>
+              <p>
+                Six-month Interdisciplinary Project as part of the TUM Informatics curriculum, in collaboration
+                with the TUM Entrepreneurship Research Institute, built in a team of five students.
+              </p>
+              <div class="tags stack"><span class="tag">Python</span><span class="tag">Flask</span><span class="tag">React</span><span class="tag">JavaScript</span><span class="tag">GCP</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-company">
+          <div class="exp-head">
+            <div class="exp-name">QYOBO</div>
+            <div class="exp-meta">Munich, Germany &middot; On-site</div>
+          </div>
+          <div class="exp-roles">
+            <div class="exp-role">
+              <div class="role">Working Student – Data Engineering</div>
+              <div class="exp-meta">Part-time &middot; Jun 2023 – Dec 2023 &middot; 7 mos</div>
+              <p>
+                Built data pipelines and web scraping systems for pharmaceutical market data, handling the full
+                flow from raw data extraction to transformation and structured storage in PostgreSQL.
+              </p>
+              <div class="tags stack"><span class="tag">Python</span><span class="tag">Scrapy</span><span class="tag">Web scraping</span><span class="tag">PostgreSQL</span><span class="tag">ETL</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-company">
+          <div class="exp-head">
+            <div class="exp-name">Jotform</div>
+            <div class="exp-meta">Ankara, Türkiye &middot; Hybrid</div>
+          </div>
+          <div class="exp-roles">
+            <div class="exp-role">
+              <div class="role">Machine Learning Intern</div>
+              <div class="exp-meta">Internship &middot; Jun 2021 – Jul 2021 &middot; 1 mo</div>
+              <p>Built a translation tool that used an RNN-based model with attention to translate form data from 15 languages into English.</p>
+              <div class="tags stack"><span class="tag">PyTorch</span><span class="tag">NLP</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-company">
+          <div class="exp-head">
+            <div class="exp-name">Yapı Kredi Teknoloji</div>
+            <div class="exp-meta">Gebze, Kocaeli, Türkiye &middot; Remote</div>
+          </div>
+          <div class="exp-roles">
+            <div class="exp-role">
+              <div class="role">Software Engineer Intern</div>
+              <div class="exp-meta">Internship &middot; Jul 2020 – Sep 2020 &middot; 3 mos</div>
+              <p>Built a real-time monitoring dashboard for 100+ microservices using Java, Spring Boot, Prometheus and React.</p>
+              <div class="tags stack"><span class="tag">Microservices</span><span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">React</span><span class="tag">Prometheus</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+    <!-- Side venture & extracurricular -->
+    <div class="columns is-centered" id="activities">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Side venture and activities</h2>
+
+        <div class="exp-company">
+          <div class="exp-head">
+            <div class="exp-name">Miraclepass <span class="exp-kind">Side venture</span></div>
+            <div class="exp-meta">Ankara, Türkiye</div>
+          </div>
+          <div class="exp-roles">
+            <div class="exp-role">
+              <div class="role">Founding Engineer</div>
+              <div class="exp-meta">Jul 2021 – Mar 2022</div>
+              <p>Founding engineer of a QR-based mobile payment startup. In a team of three, integrated payment APIs and built the MVP in six months to enable in-person transactions.</p>
+              <div class="tags stack"><span class="tag">React Native</span><span class="tag">PHP</span><span class="tag">Payment APIs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-company">
+          <div class="exp-head">
+            <div class="exp-name">Bilkent University Young Entrepreneurs Society <span class="exp-kind">Extracurricular</span></div>
+            <div class="exp-meta">Ankara, Türkiye &middot; On-site</div>
+          </div>
+          <div class="exp-roles">
+            <div class="exp-role">
+              <div class="role">Board Member</div>
+              <div class="exp-meta">May 2018 – May 2020 &middot; 2 yrs 1 mo</div>
+              <p>Board member of Bilkent University's Young Entrepreneurs Society, organizing events to strengthen Ankara's startup ecosystem.</p>
+              <ul class="exp-bullets">
+                <li>Coordinated the Ankara Startup Summit 2019, the society's flagship event, bringing together 800 attendees, founders and investors.</li>
+                <li>Managed sponsor relations and led a team of 50 volunteers.</li>
+              </ul>
+              <div class="tags stack"><span class="tag">Event management</span><span class="tag">Sponsorship relations</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+    <!-- Education -->
+    <div class="columns is-centered" id="education">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Education</h2>
+        <div class="columns">
+          <div class="column">
+            <div class="role" style="font-family:'Google Sans',sans-serif;font-weight:600;font-size:1.1rem">M.Sc. Informatics</div>
+            <p class="has-text-grey" style="font-size:.9rem;margin-bottom:.5rem">Technical University of Munich, Oct 2022 – Sep 2025</p>
+            <p style="margin-bottom:.5rem"><b>Major:</b> Machine Learning and Analytics<br>
+            <b>Minors:</b> Engineering Software-Intensive Systems, Databases and Information Systems, Algorithms</p>
+            <p>
+              Thesis at the Chair for Computer Aided Medical Procedures and the German Heart Centre Munich:
+              <a href="thesis.html">Generalizing tracking models under sim-to-real domain shift for guidewire
+              tracking in X-ray fluoroscopy</a>.
+            </p>
+          </div>
+          <div class="column">
+            <div class="role" style="font-family:'Google Sans',sans-serif;font-weight:600;font-size:1.1rem">B.Sc. Computer Science</div>
+            <p class="has-text-grey" style="font-size:.9rem;margin-bottom:.5rem">Bilkent University, Ankara, Sep 2017 – Jun 2022</p>
+            <p>
+              Senior design project reporTown, built in a team of five: a mobile app where citizens report
+              urban issues and a YOLO model categorizes the photos. It won the Wide Impact Award among 40 teams
+              at the Bilkent CS Fair 2022.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+
+    <!-- Skills -->
+    <div class="columns is-centered" id="skills">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Skills</h2>
+        <div class="columns is-multiline">
+          <div class="column is-one-third skill-group"><h3>Programming languages</h3><div class="tags"><span class="tag">Python</span><span class="tag">Java</span><span class="tag">JavaScript</span><span class="tag">TypeScript</span><span class="tag">SQL</span></div></div>
+          <div class="column is-one-third skill-group"><h3>Frameworks and data</h3><div class="tags"><span class="tag">React</span><span class="tag">Next.js</span><span class="tag">FastAPI</span><span class="tag">Flask</span><span class="tag">Spring Boot</span><span class="tag">Scrapy</span><span class="tag">Pydantic</span><span class="tag">SQLAlchemy</span><span class="tag">PostgreSQL</span><span class="tag">MongoDB</span><span class="tag">BigQuery</span></div></div>
+          <div class="column is-one-third skill-group"><h3>AI-assisted development</h3><div class="tags"><span class="tag">Agentic development</span><span class="tag">Claude Code</span></div></div>
+          <div class="column is-one-third skill-group"><h3>AI and LLMs</h3><div class="tags"><span class="tag">MCP</span><span class="tag">LangGraph</span><span class="tag">LangChain</span><span class="tag">LangSmith</span><span class="tag">RAG</span><span class="tag">ChromaDB</span><span class="tag">LLM APIs</span></div></div>
+          <div class="column is-one-third skill-group"><h3>Computer vision</h3><div class="tags"><span class="tag">PyTorch</span><span class="tag">YOLO</span><span class="tag">OpenCV</span><span class="tag">SimpleITK</span></div></div>
+          <div class="column is-one-third skill-group"><h3>Cloud and infrastructure</h3><div class="tags"><span class="tag">GCP</span><span class="tag">AWS</span><span class="tag">Terraform</span><span class="tag">Docker</span><span class="tag">GitHub Actions</span><span class="tag">CI/CD</span><span class="tag">Git</span><span class="tag">Linux</span></div></div>
+        </div>
+        <div class="columns" style="margin-top:.5rem">
+          <div class="column skill-group"><h3>Spoken languages</h3><p>English (fluent), Turkish (native), German (elementary)</p></div>
+          <div class="column skill-group"><h3>Outside work</h3><p>Football and basketball, sailing, movies and video games, fragrances, and the startup ecosystem.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section class="hero is-light is-small" id="contact">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <h2 class="title is-3">Contact</h2>
+      <p style="margin-bottom:1rem">Open to software, AI and forward-deployed engineering roles.</p>
+      <p class="is-size-4" style="font-family:'Google Sans',sans-serif"><a href="mailto:oguz.k.imamoglu@gmail.com">oguz.k.imamoglu@gmail.com</a></p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="./static/pdfs/Oguz_Kaan_Imamoglu_Resume.pdf" aria-label="Resume PDF"><i class="fas fa-file-pdf"></i></a>
+      <a class="icon-link" href="https://github.com/OguzKaanImamoglu" aria-label="GitHub"><i class="fab fa-github"></i></a>
+      <a class="icon-link" href="https://www.linkedin.com/in/oguz-kaan-imamoglu/" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered" style="font-size:0.9rem">
+          <p>
+            Website template adapted from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>,
+            licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="./static/js/index.js"></script>
+</body>
+</html>
